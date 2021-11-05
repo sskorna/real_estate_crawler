@@ -17,13 +17,19 @@ def GetBSPlain(url):
 # print(s.prettify())
 def page_loop(url):
     s = GetBSPlain(url)
-    for nadpis in s.findAll("span", {'class':'nadpis'}):
-        for nadpis_a in nadpis.findAll("a"):
-            text = nadpis_a.get_text()
-            sublink = nadpis_a.get('href')
-            id = (sublink.split('/')[2])
-            # include try and valuerror
-            data['bazos'].append({'id': id, 'header': text, 'url': f"{base_url}{sublink}"})
+    for nadpis in s.findAll("div", {'class':'inzeratynadpis'}):
+        if nadpis.find("h2", {'class': 'nadpis'}) is not None:
+            podnadpis = nadpis.find("h2", {'class': 'nadpis'})
+
+            for nadpis_a in podnadpis.findAll("a"):
+                # added if statement to avoid first occurance of "inzeraty popis" 
+                # which as a website header
+
+                    text = nadpis_a.get_text()
+                    sublink = nadpis_a.get('href')
+                    id = (sublink.split('/')[2])
+                    # include try and valuerror
+                    data['bazos'].append({'id': id, 'header': text, 'url': f"{base_url}{sublink}"})
 
     try: 
         next_page_link = (
@@ -41,7 +47,7 @@ def page_loop(url):
     return(data)
 
 for location in locations.values(): 
-    url_init = f"{base_url}/predam/pozemok/?hledat=&hlokalita={location}&humkreis={distance}&cenaod=&cenado=&order="
+    url_init = f"{base_url}/predam/pozemok/?hledat=&hlokalita={location}&humkreis={distance}&cenaod=&cenado="
     data = page_loop(url=url_init)
 
 for idx, post in enumerate(data['bazos']):
@@ -68,6 +74,6 @@ for idx, post in enumerate(data['bazos']):
             'text_detail':detail_text
         }
         data['bazos'][idx]['detail'] = detail_data
-
+    
 with open(f'{base_cwd}/data/new/bazos.json', 'w') as f:
   json.dump(data, f)
